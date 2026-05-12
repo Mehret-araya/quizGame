@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    
+</head>
+<body>
+    //the code below is if we want to see the info of many counties at the same time
+    // the main difference on the url we use difference
+    <script>
+
+
+
+async function getCountry() {
+  try {
+    let response = await fetch("https://restcountries.com/v3.1/alpha?codes=et,us,fr");
+    let data = await response.json();
+
+    data.forEach((country, index) => {
+      console.log(`🌍 Country ${index + 1} Info:`);
+      console.log(`Name: ${country.name.common}`);
+      console.log(`Capital: ${country.capital?.[0]}`);
+      console.log(`Region: ${country.region}`);
+      console.log(`Population: ${country.population}`);
+      console.log("----------------------");
+    });
+
+  } catch (error) {
+    console.error("Error fetching country info:", error);
+  }
+}
+
+getCountry();
+
+
+
+    </script>
+</body>
+</html>

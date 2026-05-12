@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   // the code below is if we want to see the info of the specific country which the url we give is for it  
+    <script>
+
+        async function getWeather() {
+  try {
+    let response = await fetch("https://api.open-meteo.com/v1/forecast?latitude=9.03&longitude=38.74&current_weather=true");
+    let data = await response.json();
+
+    console.log("🌦 Weather Info:");
+    console.log(`Temperature: ${data.current_weather.temperature}°C`);
+    console.log(`Wind Speed: ${data.current_weather.windspeed} km/h`);
+
+  } catch (error) {
+    console.error("Error fetching weather:", error);
+  }
+}
+
+getWeather();
+
+ async function getCountry() {
+  try {
+   let response = await fetch("https://restcountries.com/v3.1/name/ethiopia"); 
+
+    let data = await response.json();
+console.log("🌍 Country Info:");
+console.log(`Name: ${data[0].name.common}`);
+console.log(`Capital: ${data[0].capital[0]}`); 
+console.log(`Region: ${data[0].region}`);
+console.log(`Population: ${data[0].population}`)
+if (data[1]) {
+      console.log("🌍 Country 2 Info:");
+      console.log(`Name: ${data[1].name.common}`);
+      console.log(`Capital: ${data[1].capital?.[0]}`);
+      console.log(`Region: ${data[1].region}`);
+      console.log(`Population: ${data[1].population}`);
+    } else {
+      console.log("⚠️ Only one country returned from API");
+    }
+
+  } catch (error) {
+    console.error("Error fetching country info:", error);
+  }
+}
+
+getCountry();
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

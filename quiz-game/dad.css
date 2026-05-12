@@ -1,0 +1,271 @@
+/* =========================
+   GLOBAL PAGE STYLE
+========================= */
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 100vh;
+  margin: 0;
+  text-align: center;
+}
+
+/* =========================
+   THEMES
+========================= */
+.dark-theme { background: #121212; color: #ffffff; }
+.dark-theme #start-screen, .dark-theme #quiz-screen, .dark-theme #result-screen {
+    background: #1e1e1e; color: white; border: 1px solid #333;
+}
+.dark-theme button { background: #333; color: white; }
+
+/* =========================
+   HIDE SCREENS
+========================= */
+.hidden {
+  display: none;
+}
+
+/* =========================
+   COMMON SCREEN STYLE
+========================= */
+#start-screen,
+#quiz-screen,
+#result-screen,
+#menu-screen,
+#reaction-screen,
+#leaderboard-screen,
+#memory-screen {
+  width: 500px;
+  max-width: 90%;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  margin: 0 auto;
+  transition: all 0.5s ease;
+}
+
+#theme-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+.correct-anim { background: #28a745 !important; transform: scale(1.05); }
+.wrong-anim { background: #dc3545 !important; animation: shake 0.3s; }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* =========================
+   GAME HUB (MENU)
+   Soft BLUE-GRAY background
+========================= */
+#menu-screen {
+  background: linear-gradient(135deg, #e3eaf2, #d6dde8);
+  color: #1f2d3d;
+}
+
+/* =========================
+   QUIZ SCREEN
+   Soft LIGHT WHITE-BLUE background
+========================= */
+#quiz-screen {
+  background: linear-gradient(135deg, #ffffff, #eef3f8);
+}
+
+/* =========================
+   START SCREEN
+========================= */
+#start-screen {
+  background: #ffffff;
+}
+
+/* =========================
+   RESULT SCREEN
+========================= */
+#result-screen {
+  background: #ffffff;
+}
+
+/* =========================
+   HEADINGS
+========================= */
+h1, h2 {
+  margin-bottom: 15px;
+}
+
+/* =========================
+   BUTTONS (GLOBAL)
+========================= */
+button {
+  padding: 10px;
+  margin: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  transition: 0.3s;
+}
+
+/* =========================
+   START BUTTON
+========================= */
+#start-btn {
+  background: #007bff;
+  width: 70%;
+}
+
+#start-btn:hover {
+  background: #0056b3;
+}
+
+/* =========================
+   QUIZ OPTION BUTTONS
+========================= */
+#options button {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  background: #007bff;
+}
+
+#options button:hover {
+  transform: scale(1.03);
+}
+
+/* Selected answers */
+.correct {
+  background: #28a745 !important;
+}
+
+.wrong {
+  background: #dc3545 !important;
+}
+
+/* =========================
+   NAVIGATION BUTTONS
+========================= */
+#nav-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+#prev-btn {
+  background: #6c757d;
+  width: 40%;
+}
+
+#prev-btn:hover {
+  background: #5a6268;
+}
+
+#next-btn {
+  background: #28a745;
+  width: 40%;
+}
+
+#next-btn:hover {
+  background: #218838;
+}
+
+/* =========================
+   TIMER
+========================= */
+#timer {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* =========================
+   GAME HUB BUTTONS
+========================= */
+#menu-screen button {
+  display: block;
+  width: 70%;
+  margin: 12px auto;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e3c72;
+  font-weight: bold;
+}
+
+#menu-screen button:hover {
+  background: #ffd700;
+  color: black;
+}
+
+/* =========================
+   REACTION GAME
+========================= */
+#reaction-screen {
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+}
+
+#reaction-btn {
+  width: 60%;
+  padding: 15px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+  background: red;
+  color: white;
+  cursor: pointer;
+}
+
+#reaction-btn:disabled {
+  background: gray;
+}
+
+/* =========================
+   MEMORY MATCH GAME
+========================= */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+  perspective: 1000px;
+}
+
+.card {
+  height: 80px;
+  background: #007bff;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: transparent; /* Hide emoji until flipped */
+  transition: transform 0.3s, background 0.3s;
+}
+
+.card.flipped {
+  background: #ffffff;
+  color: #000;
+  transform: rotateY(180deg);
+  border: 2px solid #007bff;
+}
+
+.card.matched {
+  background: #28a745;
+  color: #fff;
+  cursor: default;
+  border-color: #28a745;
+}
