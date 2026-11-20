@@ -90,6 +90,7 @@ async function startQuiz() {
   answerLocked = false;
   userAnswers = new Array(currentQuestions.length).fill(null);
   byId('quiz-mode-label').textContent = `${gameMode === 'survival' ? 'SURVIVAL' : 'CLASSIC'} · ${byId('quiz-type').selectedOptions[0].text.toUpperCase()}`;
+  byId('result-screen').replaceChildren();
   byId('start-screen').classList.add('hidden');
   byId('quiz-screen').classList.remove('hidden');
   showQuestion();
