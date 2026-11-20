@@ -331,6 +331,7 @@ function startMemoryGame() {
   memoryMoves = 0;
   memoryLocked = false;
   updateMemoryStats();
+  byId('memory-message').textContent = '';
   shuffle([...memoryEmojis]).forEach((emoji, index) => {
     const card = document.createElement('button');
     card.type = 'button';
@@ -361,7 +362,7 @@ function handleCardClick(card, index) {
     matchedCount += 2;
     flippedCards = [];
     updateMemoryStats();
-    if (matchedCount === memoryEmojis.length) window.setTimeout(() => window.alert(`You found all pairs in ${memoryMoves} moves! 🎉`), 250);
+    if (matchedCount === memoryEmojis.length) byId('memory-message').textContent = `🎉 All pairs found in ${memoryMoves} moves!`;
   } else {
     memoryLocked = true;
     window.setTimeout(() => {
