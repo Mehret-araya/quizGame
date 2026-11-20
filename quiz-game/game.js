@@ -280,6 +280,7 @@ function openQuiz(mode = 'classic') { gameMode = mode; byId('menu-screen').class
 function openReaction() { byId('menu-screen').classList.add('hidden'); byId('reaction-screen').classList.remove('hidden'); startReactionGame(); }
 function startReactionGame() {
   const button = byId('reaction-btn');
+  byId('reaction-result').textContent = '';
   byId('reaction-text').textContent = 'Wait for green, then tap as fast as you can.';
   button.disabled = true;
   button.textContent = 'Wait…';
