@@ -199,6 +199,7 @@ function startTimer() {
   const timerElement = byId('timer');
   const tick = () => {
     timerElement.textContent = `⏱ ${time}s`;
+    timerElement.setAttribute('aria-label', `${time} seconds remaining`);
     timerElement.classList.toggle('urgent', time <= 3);
   };
   tick();
