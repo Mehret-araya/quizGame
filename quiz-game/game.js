@@ -227,7 +227,7 @@ function showResult() {
   const percent = Math.round((score / currentQuestions.length) * 100);
   const result = byId('result-screen');
   const message = percent === 100 ? 'Perfect run. You nailed every question!' : percent >= 60 ? 'Nice work. Your knowledge is adding up.' : 'Good practice. Ready for another round?';
-  result.innerHTML = `<div class="eyebrow">${gameMode === 'survival' ? 'SURVIVAL RUN' : 'QUIZ COMPLETE'}</div><h2>${percent === 100 ? 'Brilliant!' : 'Well played!'}</h2><div class="final-score">${score} / ${currentQuestions.length}</div><p class="result-message">${percent}% correct · ${message}</p><div class="result-actions"><button class="primary-button" type="button" onclick="restartQuiz()">Play again</button><button class="secondary-button" type="button" onclick="backToMenuFromResults()">Back to games</button></div>`;
+  result.innerHTML = `<div class="eyebrow">${byId('quiz-type').selectedOptions[0].text} · ${gameMode === 'survival' ? 'SURVIVAL RUN' : 'CLASSIC'}</div><h2>${percent === 100 ? 'Brilliant!' : 'Well played!'}</h2><div class="final-score">${score} / ${currentQuestions.length}</div><p class="result-message">${percent}% correct · ${message}</p><div class="result-actions"><button class="primary-button" type="button" onclick="restartQuiz()">Play again</button><button class="secondary-button" type="button" onclick="backToMenuFromResults()">Back to games</button></div>`;
   byId('quiz-screen').classList.add('hidden');
   result.classList.remove('hidden');
   const history = readHistory();
