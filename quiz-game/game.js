@@ -97,7 +97,7 @@ async function startQuiz() {
 }
 
 async function fetchAPIQuestions() {
-  const response = await fetch('https://opentdb.com/api.php?amount=5&type=multiple');
+  const response = await fetch('https://opentdb.com/api.php?amount=5&type=multiple', { signal: AbortSignal.timeout(10000) });
   if (!response.ok) throw new Error('Question service is unavailable');
   const data = await response.json();
   if (data.response_code !== 0 || !data.results?.length) throw new Error('No questions returned');
