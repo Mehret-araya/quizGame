@@ -138,6 +138,9 @@ function showQuestion() {
     const label = document.createElement('span');
     label.textContent = option;
     button.append(letter, label);
+    if (userAnswers[currentIndex] === option) {
+      button.classList.add(option === question.answer ? 'correct-anim' : 'wrong-anim');
+    }
     button.addEventListener('click', () => selectAnswer(option));
     options.appendChild(button);
   });
@@ -150,7 +153,7 @@ function showQuestion() {
 }
 
 function selectAnswer(option) {
-  if (answerLocked || userAnswers[currentIndex] !== null) return;
+  if (answerLocked) return;
   answerLocked = true;
   updateNavButtons();
   clearInterval(timer);
