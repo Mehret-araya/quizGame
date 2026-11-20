@@ -375,7 +375,7 @@ function handleCardClick(card, index) {
     }, 800);
   }
 }
-function backToMenuFromMemory() { byId('memory-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
+function backToMenuFromMemory() { memoryLocked = false; flippedCards = []; byId('memory-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
 
 /* Keyboard shortcuts for answer selection. */
 document.addEventListener('keydown', event => {
