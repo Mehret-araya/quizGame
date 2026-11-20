@@ -1,90 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz & Reaction Game Hub</title>
-    <link rel="stylesheet" href="dad.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f7fb">
+  <meta name="description" content="Play quizzes, reaction tests, and memory games in one place.">
+  <title>Quiz & Reaction Game Hub</title>
+  <link rel="stylesheet" href="dad.css">
 </head>
 <body class="light-theme">
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark theme">🌙 Dark mode</button>
 
-    <button id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+  <main class="app-shell">
+    <section id="menu-screen" class="screen menu-screen" aria-labelledby="app-title">
+      <div class="eyebrow">YOUR PLAYGROUND</div>
+      <h1 id="app-title">Game hub</h1>
+      <p class="intro">A quick brain break, whenever you need one.</p>
+      <div class="game-list">
+        <button class="game-card" type="button" onclick="openQuiz('classic')"><span class="game-icon">🧠</span><span><strong>Classic quiz</strong><small>Pick a topic and test your knowledge</small></span><span class="card-arrow">→</span></button>
+        <button class="game-card" type="button" onclick="openQuiz('survival')"><span class="game-icon">❤️</span><span><strong>Survival mode</strong><small>One wrong answer ends the run</small></span><span class="card-arrow">→</span></button>
+        <button class="game-card" type="button" onclick="openReaction()"><span class="game-icon">⚡</span><span><strong>Reaction test</strong><small>How fast can you react?</small></span><span class="card-arrow">→</span></button>
+        <button class="game-card" type="button" onclick="openMemoryGame()"><span class="game-icon">🃏</span><span><strong>Memory match</strong><small>Find all eight matching pairs</small></span><span class="card-arrow">→</span></button>
+      </div>
+      <button class="text-button" type="button" onclick="showLeaderboard()">🏆 View score history</button>
+    </section>
 
-    <!-- Main Menu Screen -->
-    <div id="menu-screen">
-        <h1>Game Hub</h1>
-        <p>Choose a game to play:</p>
-        <button onclick="openQuiz('classic')">Classic Quiz</button>
-        <button onclick="openQuiz('survival')">Survival Mode (1 Life)</button>
-        <button onclick="openReaction()">Reaction Test</button>
-        <button onclick="openMemoryGame()">Memory Match</button>
-        <button onclick="showLeaderboard()">🏆 Leaderboard</button>
-    </div>
+    <section id="start-screen" class="screen hidden" aria-labelledby="settings-title">
+      <button class="back-link" type="button" onclick="backToMenuFromQuiz()">← Back to games</button>
+      <div class="eyebrow">MAKE IT YOURS</div>
+      <h1 id="settings-title">Quiz settings</h1>
+      <p class="intro">Choose your topic and how much of a challenge you want.</p>
+      <div class="field-group"><label for="quiz-type">Category</label><select id="quiz-type"><option value="general">General knowledge</option><option value="math">Mathematics</option><option value="computer">Computer science</option><option value="geography">Geography</option><option value="science">Science</option><option value="api">Random questions 🌐</option></select></div>
+      <div class="field-group"><label for="difficulty">Length</label><select id="difficulty"><option value="easy">Quick · 2 questions</option><option value="medium" selected>Standard · up to 3 questions</option><option value="hard">Full set</option></select></div>
+      <button id="start-btn" class="primary-button" type="button">Start quiz <span>→</span></button>
+    </section>
 
-    <!-- Quiz Setup Screen -->
-    <div id="start-screen" class="hidden">
-        <h1>Quiz Settings</h1>
-        <div style="margin-bottom: 20px;">
-            <label for="quiz-type">Category:</label>
-            <select id="quiz-type">
-                <option value="general">General Knowledge</option>
-                <option value="math">Mathematics</option>
-                <option value="computer">Computer Science</option>
-                <option value="geography">Geography</option>
-                <option value="science">Science</option>
-                <option value="api">Random API Questions 🌐</option>
-            </select>
-            <br><br>
-            <label for="difficulty">Difficulty:</label>
-            <select id="difficulty">
-                <option value="easy">Easy (2 Questions)</option>
-                <option value="medium">Medium (3 Questions)</option>
-                <option value="hard">Hard (All Questions)</option>
-            </select>
-        </div>
-        <button id="start-btn">Start Quiz</button>
-    </div>
+    <section id="quiz-screen" class="screen hidden" aria-labelledby="question">
+      <div class="quiz-topline"><span id="quiz-mode-label" class="eyebrow">CLASSIC QUIZ</span><span id="timer" class="timer-pill">⏱ 10s</span></div>
+      <div id="progress" class="progress-label">Question 1 / 3</div>
+      <div class="progress-track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+      <h2 id="question" tabindex="-1">Question text appears here</h2>
+      <div id="options" class="options-list"></div>
+      <p class="keyboard-hint">Tip: use 1–4 to choose an answer</p>
+      <div id="nav-buttons"><button id="prev-btn" class="secondary-button" type="button">Previous</button><button id="next-btn" class="primary-button" type="button">Next →</button></div>
+      <button class="text-button danger-text" type="button" onclick="backToMenuFromQuiz()">Quit quiz</button>
+    </section>
 
-    <!-- Active Quiz Screen -->
-    <div id="quiz-screen" class="hidden">
-        <div id="timer">⏱ Time: 10</div>
-        <div id="progress">Question 1 / X</div>
-        <h2 id="question">Question text appears here</h2>
-        <div id="options"></div>
-        <div id="nav-buttons">
-            <button id="prev-btn">Previous</button>
-            <button id="next-btn">Next</button>
-        </div>
-        <button onclick="backToMenuFromQuiz()" style="background: #dc3545; margin-top: 20px; width: 80%;">Quit Quiz</button>
-    </div>
+    <section id="result-screen" class="screen hidden" aria-live="polite"></section>
 
-    <!-- Results Screen -->
-    <div id="result-screen" class="hidden"></div>
+    <section id="leaderboard-screen" class="screen hidden" aria-labelledby="leaderboard-title">
+      <button class="back-link" type="button" onclick="backToMenuFromLeaderboard()">← Back to games</button>
+      <div class="eyebrow">YOUR PROGRESS</div><h2 id="leaderboard-title">Score history</h2>
+      <div id="leaderboard-list"></div>
+      <button id="clear-history-btn" class="text-button danger-text" type="button">Clear score history</button>
+    </section>
 
-    <!-- Leaderboard Screen -->
-    <div id="leaderboard-screen" class="hidden">
-        <h2>🏆 Top Scores</h2>
-        <div id="leaderboard-list"></div>
-        <button onclick="backToMenuFromLeaderboard()">Back</button>
-    </div>
+    <section id="reaction-screen" class="screen hidden" aria-labelledby="reaction-title">
+      <button class="back-link" type="button" onclick="backToMenu()">← Back to games</button>
+      <div class="eyebrow">QUICK REFLEXES</div><h1 id="reaction-title">Reaction test</h1>
+      <p id="reaction-text" class="intro">Wait for green, then tap as fast as you can.</p>
+      <button id="reaction-btn" type="button">Ready?</button><p id="reaction-result" aria-live="polite"></p>
+    </section>
 
-    <!-- Reaction Game Screen -->
-    <div id="reaction-screen" class="hidden">
-        <h1>Reaction Timer</h1>
-        <p id="reaction-text">Wait for Green...</p>
-        <button id="reaction-btn">WAIT...</button>
-        <p id="reaction-result"></p>
-        <button onclick="backToMenu()">Back to Menu</button>
-    </div>
-
-    <!-- Memory Match Screen -->
-    <div id="memory-screen" class="hidden">
-        <h1>Memory Match</h1>
-        <p>Find the pairs!</p>
-        <div id="memory-grid" class="memory-grid"></div>
-        <button onclick="backToMenuFromMemory()" style="margin-top: 20px;">Back to Menu</button>
-    </div>
-
-    <script src="game.js"></script>
+    <section id="memory-screen" class="screen hidden" aria-labelledby="memory-title">
+      <button class="back-link" type="button" onclick="backToMenuFromMemory()">← Back to games</button>
+      <div class="eyebrow">TRAIN YOUR BRAIN</div><h1 id="memory-title">Memory match</h1>
+      <p class="intro">Find all the matching pairs.</p><p id="memory-stats" class="memory-stats">Moves: 0 <span>•</span> Pairs: 0 / 8</p>
+      <div id="memory-grid" class="memory-grid" aria-label="Memory cards"></div>
+      <button id="memory-restart-btn" class="secondary-button" type="button">↻ Restart game</button>
+    </section>
+  </main>
+  <script src="game.js"></script>
 </body>
 </html>

@@ -1,475 +1,375 @@
-/* =========================
-   QUIZ VARIABLES
-========================= */
+/* Quiz state */
 let currentIndex = 0;
 let score = 0;
 let time = 10;
 let timer;
-
-let gameMode = 'classic'; // 'classic' or 'survival'
+let gameMode = 'classic';
 let currentQuestions = [];
 let userAnswers = [];
-
-/* =========================
-   SOUND EFFECTS (Place mp3 files in your folder)
-========================= */
-const correctSound = new Audio('correct.mp3');
-const wrongSound = new Audio('wrong.mp3');
-
-/* =========================
-   REACTION GAME
-========================= */
+let answerLocked = false;
 let reactionStartTime;
 let reactionTimeout;
+let flippedCards = [];
+let matchedCount = 0;
+let memoryMoves = 0;
+let memoryLocked = false;
 
-/* =========================
-   QUESTIONS DATABASE
-========================= */
 const allQuestions = {
   general: [
-    {
-      question: "What is the capital of Ethiopia?",
-      options: ["Addis Ababa", "Nairobi", "Cairo", "London"],
-      answer: "Addis Ababa"
-    },
-    {
-      question: "Which continent is Ethiopia in?",
-      options: ["Asia", "Africa", "Europe", "America"],
-      answer: "Africa"
-    },
-    {
-      question: "How many continents are there?",
-      options: ["5", "6", "7", "8"],
-      answer: "7"
-    },
-    {
-      question: "Which planet do we live on?",
-      options: ["Mars", "Earth", "Venus", "Jupiter"],
-      answer: "Earth"
-    }
+    { question: 'What is the capital of Ethiopia?', options: ['Addis Ababa', 'Nairobi', 'Cairo', 'London'], answer: 'Addis Ababa' },
+    { question: 'Which continent is Ethiopia in?', options: ['Asia', 'Africa', 'Europe', 'America'], answer: 'Africa' },
+    { question: 'How many continents are there?', options: ['5', '6', '7', '8'], answer: '7' },
+    { question: 'Which planet do we live on?', options: ['Mars', 'Earth', 'Venus', 'Jupiter'], answer: 'Earth' }
   ],
-
   math: [
-    { question: "2 + 2 = ?", options: ["3", "4", "5", "6"], answer: "4" },
-    { question: "5 × 3 = ?", options: ["15", "10", "20", "25"], answer: "15" },
-    { question: "10 ÷ 2 = ?", options: ["2", "5", "10", "8"], answer: "5" },
-    { question: "7 + 6 = ?", options: ["12", "13", "14", "15"], answer: "13" }
+    { question: '2 + 2 = ?', options: ['3', '4', '5', '6'], answer: '4' },
+    { question: '5 × 3 = ?', options: ['15', '10', '20', '25'], answer: '15' },
+    { question: '10 ÷ 2 = ?', options: ['2', '5', '10', '8'], answer: '5' },
+    { question: '7 + 6 = ?', options: ['12', '13', '14', '15'], answer: '13' }
   ],
-
   computer: [
-    {
-      question: "Which language runs in the browser?",
-      options: ["Python", "C", "Java", "JavaScript"],
-      answer: "JavaScript"
-    },
-    {
-      question: "HTML stands for?",
-      options: [
-        "Hyper Text Markup Language",
-        "Hot Mail",
-        "High Text Machine Language",
-        "None"
-      ],
-      answer: "Hyper Text Markup Language"
-    }
+    { question: 'Which language runs in the browser?', options: ['Python', 'C', 'Java', 'JavaScript'], answer: 'JavaScript' },
+    { question: 'HTML stands for?', options: ['Hyper Text Markup Language', 'Hot Mail', 'High Text Machine Language', 'None'], answer: 'Hyper Text Markup Language' }
   ],
-
   geography: [
-    {
-      question: "What is the largest continent?",
-      options: ["Africa", "Asia", "Europe", "Australia"],
-      answer: "Asia"
-    },
-    {
-      question: "Which ocean is the largest?",
-      options: ["Atlantic", "Indian", "Pacific", "Arctic"],
-      answer: "Pacific"
-    }
+    { question: 'What is the largest continent?', options: ['Africa', 'Asia', 'Europe', 'Australia'], answer: 'Asia' },
+    { question: 'Which ocean is the largest?', options: ['Atlantic', 'Indian', 'Pacific', 'Arctic'], answer: 'Pacific' }
   ],
-
   science: [
-    { question: "Water formula is?", options: ["H2O", "CO2", "O2", "NaCl"], answer: "H2O" },
-    { question: "Sun is a?", options: ["Planet", "Star", "Moon", "Asteroid"], answer: "Star" }
+    { question: 'Water formula is?', options: ['H₂O', 'CO₂', 'O₂', 'NaCl'], answer: 'H₂O' },
+    { question: 'The Sun is a…', options: ['Planet', 'Star', 'Moon', 'Asteroid'], answer: 'Star' }
   ]
 };
 
+const memoryEmojis = ['🍎', '🍎', '🍌', '🍌', '🍇', '🍇', '🍓', '🍓', '🍒', '🍒', '🍍', '🍍', '🥝', '🥝', '🍉', '🍉'];
+const byId = id => document.getElementById(id);
 
-document.getElementById("start-btn").addEventListener("click", async () => {
-  const type = document.getElementById("quiz-type").value;
-  const difficultyElement = document.getElementById("difficulty");
-  const difficulty = difficultyElement ? difficultyElement.value : "medium";
+/* Persist the player's theme preference. */
+function applyTheme(theme) {
+  document.body.classList.toggle('dark-theme', theme === 'dark');
+  document.body.classList.toggle('light-theme', theme !== 'dark');
+  const button = byId('theme-toggle');
+  button.textContent = theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode';
+  button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+}
+function toggleTheme() {
+  const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+  localStorage.setItem('quizTheme', next);
+  applyTheme(next);
+}
+applyTheme(localStorage.getItem('quizTheme') || 'light');
+byId('theme-toggle').addEventListener('click', toggleTheme);
 
-  if (type === "api") {
-    document.getElementById("start-btn").textContent = "Loading Questions...";
-    await fetchAPIQuestions();
-    document.getElementById("start-btn").textContent = "Start Quiz";
-  } else {
-    let pool = [...allQuestions[type]];
-    shuffle(pool); // Randomize questions
-
-    if (difficulty === "easy") {
-        currentQuestions = pool.slice(0, 2);
-    } else if (difficulty === "medium") {
-        currentQuestions = pool.slice(0, 3);
-    } else {
-        currentQuestions = pool;
+/* Quiz setup and question loading. */
+byId('start-btn').addEventListener('click', startQuiz);
+async function startQuiz() {
+  const button = byId('start-btn');
+  const type = byId('quiz-type').value;
+  const difficulty = byId('difficulty').value;
+  button.disabled = true;
+  button.innerHTML = 'Loading questions…';
+  if (type === 'api') {
+    try {
+      await fetchAPIQuestions();
+    } catch (error) {
+      window.alert('Could not load online questions. General knowledge will be used instead.');
+      currentQuestions = shuffle([...allQuestions.general]);
     }
+  } else {
+    const pool = shuffle([...allQuestions[type]]);
+    currentQuestions = difficulty === 'easy' ? pool.slice(0, 2) : difficulty === 'medium' ? pool.slice(0, 3) : pool;
   }
-
+  button.disabled = false;
+  button.innerHTML = 'Start quiz <span>→</span>';
+  if (!currentQuestions.length) return;
   currentIndex = 0;
   score = 0;
+  answerLocked = false;
   userAnswers = new Array(currentQuestions.length).fill(null);
-
-  document.getElementById("start-screen").classList.add("hidden");
-  document.getElementById("quiz-screen").classList.remove("hidden");
-
+  byId('quiz-mode-label').textContent = `${gameMode === 'survival' ? 'SURVIVAL' : 'CLASSIC'} · ${byId('quiz-type').selectedOptions[0].text.toUpperCase()}`;
+  byId('start-screen').classList.add('hidden');
+  byId('quiz-screen').classList.remove('hidden');
   showQuestion();
-});
+}
 
 async function fetchAPIQuestions() {
-    try {
-        const response = await fetch('https://opentdb.com/api.php?amount=5&type=multiple');
-        const data = await response.json();
-        currentQuestions = data.results.map(q => ({
-            question: q.question,
-            options: shuffle([...q.incorrect_answers, q.correct_answer]),
-            answer: q.correct_answer
-        }));
-    } catch (error) {
-        alert("Failed to load API questions. Using General Knowledge instead.");
-        currentQuestions = allQuestions.general;
-    }
+  const response = await fetch('https://opentdb.com/api.php?amount=5&type=multiple');
+  if (!response.ok) throw new Error('Question service is unavailable');
+  const data = await response.json();
+  if (data.response_code !== 0 || !data.results?.length) throw new Error('No questions returned');
+  const decode = value => {
+    const node = document.createElement('textarea');
+    node.innerHTML = value;
+    return node.value;
+  };
+  currentQuestions = data.results.map(item => {
+    const answer = decode(item.correct_answer);
+    return { question: decode(item.question), answer, options: shuffle([...item.incorrect_answers.map(decode), answer]) };
+  });
 }
 
 function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
-/* =========================
-   SHOW QUESTION
-========================= */
 function showQuestion() {
   clearInterval(timer);
-
-  const q = currentQuestions[currentIndex];
-
-  document.getElementById("question").textContent = q.question;
-
-  const optionsDiv = document.getElementById("options");
-  optionsDiv.innerHTML = "";
-
-  q.options.forEach(option => {
-    const btn = document.createElement("button");
-    btn.textContent = option;
-
-    if (userAnswers[currentIndex] === option) {
-      btn.style.background = "#ffc107";
-    }
-
-    btn.onclick = function() {
-      userAnswers[currentIndex] = option;
-      const buttons = document.querySelectorAll("#options button");
-
-      buttons.forEach(b => {
-        b.style.pointerEvents = "none";
-        if (b.textContent === q.answer) {
-          b.classList.add("correct-anim");
-          if (option === q.answer) correctSound.play().catch(()=>{});
-        } else if (b.textContent === option) {
-          b.classList.add("wrong-anim");
-          wrongSound.play().catch(()=>{});
-        }
-      });
-
-      if (gameMode === 'survival' && option !== q.answer) {
-          setTimeout(() => showResult(), 1000);
-          return;
-      }
-
-      setTimeout(() => {
-        if (currentIndex < currentQuestions.length - 1) {
-          currentIndex++;
-          showQuestion();
-        } else {
-          showResult();
-        }
-      }, 1200);
-    };
-
-    optionsDiv.appendChild(btn);
+  answerLocked = false;
+  const question = currentQuestions[currentIndex];
+  byId('question').textContent = question.question;
+  byId('question').focus({ preventScroll: true });
+  const options = byId('options');
+  options.replaceChildren();
+  question.options.forEach((option, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.option = option;
+    const letter = document.createElement('span');
+    letter.className = 'option-letter';
+    letter.textContent = String(index + 1);
+    const label = document.createElement('span');
+    label.textContent = option;
+    button.append(letter, label);
+    button.addEventListener('click', () => selectAnswer(option));
+    options.appendChild(button);
   });
-
-  document.getElementById("progress").textContent =
-    `Question ${currentIndex + 1} / ${currentQuestions.length}`;
-
+  byId('progress').textContent = `Question ${currentIndex + 1} / ${currentQuestions.length}`;
+  const percent = Math.round(((currentIndex + 1) / currentQuestions.length) * 100);
+  byId('progress-fill').style.width = `${percent}%`;
+  document.querySelector('.progress-track').setAttribute('aria-valuenow', percent);
   updateNavButtons();
   startTimer();
 }
 
-/* =========================
-   NAVIGATION
-========================= */
-document.getElementById("next-btn").addEventListener("click", () => {
+function selectAnswer(option) {
+  if (answerLocked || userAnswers[currentIndex] !== null) return;
+  answerLocked = true;
+  clearInterval(timer);
+  userAnswers[currentIndex] = option;
+  const correct = currentQuestions[currentIndex].answer;
+  document.querySelectorAll('#options button').forEach(button => {
+    button.disabled = true;
+    if (button.dataset.option === correct) button.classList.add('correct-anim');
+    else if (button.dataset.option === option) button.classList.add('wrong-anim');
+  });
+  if (gameMode === 'survival' && option !== correct) {
+    window.setTimeout(showResult, 850);
+    return;
+  }
+  window.setTimeout(() => {
+    if (!byId('quiz-screen').classList.contains('hidden')) advanceQuestion();
+  }, 850);
+}
+
+function advanceQuestion() {
   if (currentIndex < currentQuestions.length - 1) {
     currentIndex++;
     showQuestion();
-  } else {
-    showResult();
-  }
+  } else showResult();
+}
+byId('next-btn').addEventListener('click', () => {
+  if (answerLocked) return;
+  if (userAnswers[currentIndex] !== null) advanceQuestion();
+  else if (currentIndex === currentQuestions.length - 1) showResult();
+  else advanceQuestion();
 });
-
-document.getElementById("prev-btn").addEventListener("click", () => {
-  if (currentIndex > 0) {
-    currentIndex--;
-    showQuestion();
-  }
+byId('prev-btn').addEventListener('click', () => {
+  if (answerLocked || currentIndex === 0) return;
+  currentIndex--;
+  showQuestion();
 });
-
 function updateNavButtons() {
-  document.getElementById("prev-btn").disabled = currentIndex === 0;
-
-  document.getElementById("next-btn").textContent =
-    currentIndex === currentQuestions.length - 1 ? "Finish 🎉" : "Next ➡";
+  byId('prev-btn').disabled = currentIndex === 0 || answerLocked;
+  byId('next-btn').textContent = currentIndex === currentQuestions.length - 1 ? 'Finish quiz' : 'Next →';
+  byId('next-btn').disabled = answerLocked;
 }
 
-/* =========================
-   TIMER
-========================= */
 function startTimer() {
   clearInterval(timer);
   time = 10;
-
-  document.getElementById("timer").textContent = `⏱ Time: ${time}`;
-
+  const timerElement = byId('timer');
+  const tick = () => {
+    timerElement.textContent = `⏱ ${time}s`;
+    timerElement.classList.toggle('urgent', time <= 3);
+  };
+  tick();
   timer = setInterval(() => {
     time--;
-    document.getElementById("timer").textContent = `⏱ Time: ${time}`;
-
+    tick();
     if (time <= 0) {
       clearInterval(timer);
-      userAnswers[currentIndex] = "TIMEOUT"; // Auto-end logic
-      if (currentIndex < currentQuestions.length - 1) {
-        currentIndex++;
-        showQuestion();
-      } else {
-        showResult();
-      }
+      if (userAnswers[currentIndex] === null) userAnswers[currentIndex] = 'TIMEOUT';
+      answerLocked = true;
+      updateNavButtons();
+      window.setTimeout(advanceQuestion, 300);
     }
   }, 1000);
 }
 
-/* =========================
-   RESULT SCREEN
-========================= */
 function showResult() {
   clearInterval(timer);
-
-  score = 0;
-
-  currentQuestions.forEach((q, i) => {
-    if (userAnswers[i] === q.answer) {
-      score++;
-    }
-  });
-
-  let percent = Math.round((score / currentQuestions.length) * 100);
-
-  document.getElementById("quiz-screen").classList.add("hidden");
-  document.getElementById("result-screen").classList.remove("hidden");
-
-  document.getElementById("result-screen").innerHTML = `
-    <h2>Quiz Finished 🎉</h2>
-    <div class="final-score">Score: ${score} / ${currentQuestions.length}</div>
-    <p>Percentage: ${percent}%</p>
-    <button onclick="restartQuiz()">Try Again</button>
-    <button onclick="location.reload()">Main Menu</button>
-  `;
-
-  // save history
-  let history = JSON.parse(localStorage.getItem("quizHistory")) || [];
-
-  history.push({
-    date: new Date().toLocaleString(),
-    score,
-    total: currentQuestions.length,
-    percent
-  });
-
-  localStorage.setItem("quizHistory", JSON.stringify(history));
+  score = currentQuestions.reduce((sum, question, index) => sum + (userAnswers[index] === question.answer ? 1 : 0), 0);
+  const percent = Math.round((score / currentQuestions.length) * 100);
+  const result = byId('result-screen');
+  const message = percent === 100 ? 'Perfect run. You nailed every question!' : percent >= 60 ? 'Nice work. Your knowledge is adding up.' : 'Good practice. Ready for another round?';
+  result.innerHTML = `<div class="eyebrow">${gameMode === 'survival' ? 'SURVIVAL RUN' : 'QUIZ COMPLETE'}</div><h2>${percent === 100 ? 'Brilliant!' : 'Well played!'}</h2><div class="final-score">${score} / ${currentQuestions.length}</div><p class="result-message">${percent}% correct · ${message}</p><div class="result-actions"><button class="primary-button" type="button" onclick="restartQuiz()">Play again</button><button class="secondary-button" type="button" onclick="backToMenuFromResults()">Back to games</button></div>`;
+  byId('quiz-screen').classList.add('hidden');
+  result.classList.remove('hidden');
+  const history = readHistory();
+  history.push({ date: new Date().toISOString(), score, total: currentQuestions.length, percent, category: byId('quiz-type').selectedOptions[0].text, mode: gameMode });
+  localStorage.setItem('quizHistory', JSON.stringify(history.slice(-50)));
 }
-
-function backToMenuFromQuiz() {
-  clearInterval(timer);
-  document.getElementById("quiz-screen").classList.add("hidden");
-  document.getElementById("menu-screen").classList.remove("hidden");
+function readHistory() {
+  try { const value = JSON.parse(localStorage.getItem('quizHistory') || '[]'); return Array.isArray(value) ? value : []; }
+  catch { return []; }
 }
+function backToMenuFromQuiz() { clearInterval(timer); byId('quiz-screen').classList.add('hidden'); byId('start-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
+function backToMenuFromResults() { byId('result-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
+function restartQuiz() { byId('result-screen').classList.add('hidden'); byId('start-screen').classList.remove('hidden'); }
 
-/* =========================
-   RESTART
-========================= */
-function restartQuiz() {
-  clearInterval(timer);
-
-  currentIndex = 0;
-  score = 0;
-  time = 10;
-
-  document.getElementById("result-screen").classList.add("hidden");
-  document.getElementById("start-screen").classList.remove("hidden");
-}
-
-/* =========================
-   LEADERBOARD & THEME
-========================= */
+/* Score history and navigation. */
 function showLeaderboard() {
-    document.getElementById("menu-screen").classList.add("hidden");
-    document.getElementById("leaderboard-screen").classList.remove("hidden");
-    const history = JSON.parse(localStorage.getItem("quizHistory")) || [];
-    const list = document.getElementById("leaderboard-list");
-    // Sort by best score
-    history.sort((a, b) => (b.score/b.total) - (a.score/a.total));
-    list.innerHTML = history.slice(0, 5).map(entry => 
-        `<div class="entry">${entry.date}: <b>${entry.score}/${entry.total}</b> (${entry.percent}%)</div>`
-    ).join('');
+  byId('menu-screen').classList.add('hidden');
+  byId('leaderboard-screen').classList.remove('hidden');
+  const history = readHistory().sort((a, b) => b.percent - a.percent || b.score - a.score);
+  const list = byId('leaderboard-list');
+  if (!history.length) {
+    list.innerHTML = '<div class="empty-state">No scores yet. Play a quiz and your results will show up here.</div>';
+    return;
+  }
+  list.replaceChildren(...history.slice(0, 10).map(entry => {
+    const row = document.createElement('div');
+    row.className = 'entry';
+    const meta = document.createElement('span');
+    const category = document.createElement('strong');
+    category.textContent = entry.category || 'Quiz';
+    const date = document.createElement('small');
+    date.className = 'entry-date';
+    date.textContent = new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    meta.append(category, document.createElement('br'), date);
+    const scoreLabel = document.createElement('strong');
+    scoreLabel.textContent = `${entry.score}/${entry.total} · ${entry.percent}%`;
+    row.append(meta, scoreLabel);
+    return row;
+  }));
 }
+byId('clear-history-btn').addEventListener('click', () => {
+  if (!readHistory().length) return;
+  if (window.confirm('Clear all saved quiz scores?')) {
+    localStorage.removeItem('quizHistory');
+    showLeaderboard();
+  }
+});
+function backToMenuFromLeaderboard() { byId('leaderboard-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
+function openQuiz(mode = 'classic') { gameMode = mode; byId('menu-screen').classList.add('hidden'); byId('start-screen').classList.remove('hidden'); }
 
-function toggleTheme() {
-    const body = document.body;
-    if (body.classList.contains('light-theme')) {
-        body.classList.replace('light-theme', 'dark-theme');
-        document.getElementById('theme-toggle').textContent = "☀️ Light Mode";
-    } else {
-        body.classList.replace('dark-theme', 'light-theme');
-        document.getElementById('theme-toggle').textContent = "🌙 Dark Mode";
-    }
-}
-
-function backToMenuFromLeaderboard() {
-    document.getElementById("leaderboard-screen").classList.add("hidden");
-    document.getElementById("menu-screen").classList.remove("hidden");
-}
-
-/* =========================
-   GAME HUB NAVIGATION
-========================= */
-function openQuiz(mode = 'classic') {
-  gameMode = mode;
-  document.getElementById("menu-screen").classList.add("hidden");
-  document.getElementById("start-screen").classList.remove("hidden");
-}
-
-function openReaction() {
-  document.getElementById("menu-screen").classList.add("hidden");
-  document.getElementById("reaction-screen").classList.remove("hidden");
-  startReactionGame();
-}
-
-function backToMenu() {
-  clearTimeout(reactionTimeout);
-  document.getElementById("reaction-screen").classList.add("hidden");
-  document.getElementById("menu-screen").classList.remove("hidden");
-}
-
-/* =========================
-   REACTION GAME
-========================= */
+/* Reaction test, including early-click detection and best time. */
+function openReaction() { byId('menu-screen').classList.add('hidden'); byId('reaction-screen').classList.remove('hidden'); startReactionGame(); }
 function startReactionGame() {
-  const btn = document.getElementById("reaction-btn");
-  const text = document.getElementById("reaction-text");
-  const result = document.getElementById("reaction-result");
-
-  // Reset UI State
-  text.textContent = "Wait for Green...";
-  btn.disabled = true;
-  btn.textContent = "WAIT...";
-  btn.style.background = "red";
-  
+  const button = byId('reaction-btn');
+  byId('reaction-text').textContent = 'Wait for green, then tap as fast as you can.';
+  button.disabled = true;
+  button.textContent = 'Wait…';
+  button.style.background = '#f2a33a';
   clearTimeout(reactionTimeout);
-  let delay = Math.random() * 3000 + 2000;
-
+  reactionStartTime = null;
   reactionTimeout = setTimeout(() => {
-    text.textContent = "NOW CLICK!";
-    btn.disabled = false;
-    btn.style.background = "green";
-    reactionStartTime = Date.now();
-  }, delay);
-
-  btn.onclick = () => {
-    const reactionTime = Date.now() - reactionStartTime;
-    result.textContent = `Your reaction time: ${reactionTime} ms!`;
-    
-    text.textContent = "Nice work!";
-    btn.disabled = true;
-    btn.textContent = "WAITING...";
-    btn.style.background = "#6c757d";
-
-    // Start a new round after a short delay
-    reactionTimeout = setTimeout(startReactionGame, 2000);
+    if (byId('reaction-screen').classList.contains('hidden')) return;
+    byId('reaction-text').textContent = 'NOW! Tap the green button!';
+    button.disabled = false;
+    button.textContent = 'TAP!';
+    button.style.background = '#14845f';
+    reactionStartTime = performance.now();
+  }, Math.random() * 2500 + 1500);
+  button.onclick = () => {
+    if (reactionStartTime === null) {
+      clearTimeout(reactionTimeout);
+      byId('reaction-text').textContent = 'Too soon! Wait for green this time.';
+      byId('reaction-result').textContent = '';
+      button.disabled = true;
+      reactionTimeout = setTimeout(startReactionGame, 1100);
+      return;
+    }
+    const reactionTime = Math.round(performance.now() - reactionStartTime);
+    const previousBest = Number(localStorage.getItem('reactionBest')) || Infinity;
+    const isRecord = reactionTime < previousBest;
+    if (isRecord) localStorage.setItem('reactionBest', String(reactionTime));
+    byId('reaction-result').textContent = `${reactionTime} ms${isRecord ? ' · New personal best!' : ` · Best: ${Math.min(previousBest, reactionTime)} ms`}`;
+    byId('reaction-text').textContent = 'Great reflexes. Get ready for another round.';
+    button.disabled = true;
+    button.textContent = 'Again soon…';
+    button.style.background = '#667085';
+    reactionStartTime = null;
+    reactionTimeout = setTimeout(startReactionGame, 1800);
   };
 }
+function backToMenu() { clearTimeout(reactionTimeout); byId('reaction-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
 
-/* =========================
-   MEMORY MATCH GAME LOGIC
-========================= */
-let flippedCards = [];
-let matchedCount = 0;
-const emojis = ['🍎', '🍎', '🍌', '🍌', '🍇', '🍇', '🍓', '🍓', '🍒', '🍒', '🍍', '🍍', '🥝', '🥝', '🍉', '🍉'];
-
-function openMemoryGame() {
-  document.getElementById("menu-screen").classList.add("hidden");
-  document.getElementById("memory-screen").classList.remove("hidden");
-  startMemoryGame();
-}
-
+/* Memory match with move and pair tracking. */
+byId('memory-restart-btn').addEventListener('click', startMemoryGame);
+function openMemoryGame() { byId('menu-screen').classList.add('hidden'); byId('memory-screen').classList.remove('hidden'); startMemoryGame(); }
 function startMemoryGame() {
-  const grid = document.getElementById("memory-grid");
-  grid.innerHTML = "";
+  const grid = byId('memory-grid');
+  grid.replaceChildren();
   flippedCards = [];
   matchedCount = 0;
-  
-  const shuffledEmojis = shuffle([...emojis]);
-  
-  shuffledEmojis.forEach((emoji) => {
-    const card = document.createElement("div");
-    card.classList.add("card");
+  memoryMoves = 0;
+  memoryLocked = false;
+  updateMemoryStats();
+  shuffle([...memoryEmojis]).forEach((emoji, index) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'card';
     card.dataset.value = emoji;
-    card.textContent = emoji;
-    card.onclick = () => handleCardClick(card);
+    card.setAttribute('aria-label', `Card ${index + 1}, hidden`);
+    card.addEventListener('click', () => handleCardClick(card, index));
     grid.appendChild(card);
   });
 }
-
-function handleCardClick(card) {
-  if (flippedCards.length < 2 && !card.classList.contains("flipped") && !card.classList.contains("matched")) {
-    card.classList.add("flipped");
-    flippedCards.push(card);
-
-    if (flippedCards.length === 2) {
-      const [card1, card2] = flippedCards;
-      if (card1.dataset.value === card2.dataset.value) {
-        card1.classList.add("matched");
-        card2.classList.add("matched");
-        matchedCount += 2;
-        flippedCards = [];
-        if (matchedCount === emojis.length) {
-          setTimeout(() => alert("You found all pairs! 🎉"), 500);
-        }
-      } else {
-        setTimeout(() => {
-          card1.classList.remove("flipped");
-          card2.classList.remove("flipped");
-          flippedCards = [];
-        }, 1000);
-      }
-    }
+function updateMemoryStats() { byId('memory-stats').innerHTML = `Moves: ${memoryMoves} <span>•</span> Pairs: ${matchedCount / 2} / 8`; }
+function handleCardClick(card, index) {
+  if (memoryLocked || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  card.classList.add('flipped');
+  card.textContent = card.dataset.value;
+  card.setAttribute('aria-label', `Card ${index + 1}, ${card.dataset.value}`);
+  flippedCards.push(card);
+  if (flippedCards.length < 2) return;
+  memoryMoves++;
+  updateMemoryStats();
+  const [first, second] = flippedCards;
+  if (first.dataset.value === second.dataset.value) {
+    first.classList.add('matched');
+    second.classList.add('matched');
+    first.disabled = true;
+    second.disabled = true;
+    matchedCount += 2;
+    flippedCards = [];
+    updateMemoryStats();
+    if (matchedCount === memoryEmojis.length) window.setTimeout(() => window.alert(`You found all pairs in ${memoryMoves} moves! 🎉`), 250);
+  } else {
+    memoryLocked = true;
+    window.setTimeout(() => {
+      [first, second].forEach((item, itemIndex) => {
+        item.classList.remove('flipped');
+        item.textContent = '';
+        item.setAttribute('aria-label', `Card ${item.dataset.cardIndex || itemIndex + 1}, hidden`);
+      });
+      flippedCards = [];
+      memoryLocked = false;
+    }, 800);
   }
 }
+function backToMenuFromMemory() { byId('memory-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
 
-function backToMenuFromMemory() {
-  document.getElementById("memory-screen").classList.add("hidden");
-  document.getElementById("menu-screen").classList.remove("hidden");
-}
+/* Keyboard shortcuts for answer selection. */
+document.addEventListener('keydown', event => {
+  if (byId('quiz-screen').classList.contains('hidden') || answerLocked) return;
+  if (/^[1-4]$/.test(event.key)) {
+    const button = byId('options').children[Number(event.key) - 1];
+    if (button) button.click();
+  }
+});
