@@ -207,6 +207,7 @@ function startTimer() {
     if (time <= 0) {
       clearInterval(timer);
       if (userAnswers[currentIndex] === null) userAnswers[currentIndex] = 'TIMEOUT';
+      byId('question').setAttribute('aria-label', `${currentQuestions[currentIndex].question} Time expired`);
       answerLocked = true;
       updateNavButtons();
       if (gameMode === 'survival') {
