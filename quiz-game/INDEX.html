@@ -32,6 +32,7 @@
       <p class="intro">Choose your topic and how much of a challenge you want.</p>
       <div class="field-group"><label for="quiz-type">Category</label><select id="quiz-type"><option value="general">General knowledge</option><option value="math">Mathematics</option><option value="computer">Computer science</option><option value="geography">Geography</option><option value="science">Science</option><option value="api">Random questions 🌐</option></select></div>
       <div class="field-group"><label for="difficulty">Length</label><select id="difficulty"><option value="easy">Quick · 2 questions</option><option value="medium" selected>Standard · up to 3 questions</option><option value="hard">Full set</option></select></div>
+      <div class="field-group"><label for="time-limit">Time per question</label><select id="time-limit"><option value="10">10 seconds</option><option value="15" selected>15 seconds</option><option value="20">20 seconds</option></select></div>
       <button id="start-btn" class="primary-button" type="button">Start quiz <span>→</span></button>
     </section>
 
@@ -40,7 +41,7 @@
       <div id="progress" class="progress-label">Question 1 / 3</div>
       <div class="progress-track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
       <h2 id="question" tabindex="-1">Question text appears here</h2>
-      <div id="options" class="options-list"></div>
+      <div id="options" class="options-list" aria-live="polite"></div>
       <p class="keyboard-hint">Tip: use 1–4 to choose an answer</p>
       <div id="nav-buttons"><button id="prev-btn" class="secondary-button" type="button">Previous</button><button id="next-btn" class="primary-button" type="button">Next →</button></div>
       <button class="text-button danger-text" type="button" onclick="backToMenuFromQuiz()">Quit quiz</button>

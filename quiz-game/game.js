@@ -2,11 +2,13 @@
 let currentIndex = 0;
 let score = 0;
 let time = 10;
+let questionTimeLimit = 15;
 let timer;
 let gameMode = 'classic';
 let currentQuestions = [];
 let userAnswers = [];
 let answerLocked = false;
+let feedbackTimeout;
 let reactionStartTime;
 let reactionTimeout;
 let flippedCards = [];
@@ -66,6 +68,7 @@ async function startQuiz() {
   const button = byId('start-btn');
   const type = byId('quiz-type').value;
   const difficulty = byId('difficulty').value;
+  questionTimeLimit = Number(byId('time-limit').value) || 15;
   button.disabled = true;
   button.innerHTML = 'Loading questions…';
   if (type === 'api') {
@@ -157,10 +160,10 @@ function selectAnswer(option) {
     else if (button.dataset.option === option) button.classList.add('wrong-anim');
   });
   if (gameMode === 'survival' && option !== correct) {
-    window.setTimeout(showResult, 850);
+    feedbackTimeout = window.setTimeout(showResult, 850);
     return;
   }
-  window.setTimeout(() => {
+  feedbackTimeout = window.setTimeout(() => {
     if (!byId('quiz-screen').classList.contains('hidden')) advanceQuestion();
   }, 850);
 }
@@ -190,7 +193,7 @@ function updateNavButtons() {
 
 function startTimer() {
   clearInterval(timer);
-  time = 10;
+  time = questionTimeLimit;
   const timerElement = byId('timer');
   const tick = () => {
     timerElement.textContent = `⏱ ${time}s`;
@@ -205,6 +208,10 @@ function startTimer() {
       if (userAnswers[currentIndex] === null) userAnswers[currentIndex] = 'TIMEOUT';
       answerLocked = true;
       updateNavButtons();
+      if (gameMode === 'survival') {
+        window.setTimeout(showResult, 250);
+        return;
+      }
       window.setTimeout(advanceQuestion, 300);
     }
   }, 1000);
@@ -227,7 +234,7 @@ function readHistory() {
   try { const value = JSON.parse(localStorage.getItem('quizHistory') || '[]'); return Array.isArray(value) ? value : []; }
   catch { return []; }
 }
-function backToMenuFromQuiz() { clearInterval(timer); byId('quiz-screen').classList.add('hidden'); byId('start-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
+function backToMenuFromQuiz() { clearInterval(timer); clearTimeout(feedbackTimeout); byId('quiz-screen').classList.add('hidden'); byId('start-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
 function backToMenuFromResults() { byId('result-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
 function restartQuiz() { byId('result-screen').classList.add('hidden'); byId('start-screen').classList.remove('hidden'); }
 
@@ -325,6 +332,7 @@ function startMemoryGame() {
     card.type = 'button';
     card.className = 'card';
     card.dataset.value = emoji;
+    card.dataset.cardIndex = String(index + 1);
     card.setAttribute('aria-label', `Card ${index + 1}, hidden`);
     card.addEventListener('click', () => handleCardClick(card, index));
     grid.appendChild(card);
@@ -356,7 +364,7 @@ function handleCardClick(card, index) {
       [first, second].forEach((item, itemIndex) => {
         item.classList.remove('flipped');
         item.textContent = '';
-        item.setAttribute('aria-label', `Card ${item.dataset.cardIndex || itemIndex + 1}, hidden`);
+        item.setAttribute('aria-label', `Card ${item.dataset.cardIndex}, hidden`);
       });
       flippedCards = [];
       memoryLocked = false;
