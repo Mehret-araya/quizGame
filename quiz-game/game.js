@@ -151,6 +151,7 @@ function showQuestion() {
 function selectAnswer(option) {
   if (answerLocked || userAnswers[currentIndex] !== null) return;
   answerLocked = true;
+  updateNavButtons();
   clearInterval(timer);
   userAnswers[currentIndex] = option;
   const correct = currentQuestions[currentIndex].answer;
