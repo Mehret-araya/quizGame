@@ -287,7 +287,7 @@ function startReactionGame() {
   const button = byId('reaction-btn');
   byId('reaction-result').textContent = '';
   byId('reaction-text').textContent = 'Wait for green, then tap as fast as you can.';
-  button.disabled = true;
+  button.disabled = false;
   button.textContent = 'Wait…';
   button.style.background = '#f2a33a';
   clearTimeout(reactionTimeout);
@@ -295,7 +295,6 @@ function startReactionGame() {
   reactionTimeout = setTimeout(() => {
     if (byId('reaction-screen').classList.contains('hidden')) return;
     byId('reaction-text').textContent = 'NOW! Tap the green button!';
-    button.disabled = false;
     button.textContent = 'TAP!';
     button.style.background = '#14845f';
     reactionStartTime = performance.now();
@@ -306,6 +305,7 @@ function startReactionGame() {
       byId('reaction-text').textContent = 'Too soon! Wait for green this time.';
       byId('reaction-result').textContent = '';
       button.disabled = true;
+      button.textContent = 'Too soon…';
       reactionTimeout = setTimeout(startReactionGame, 1100);
       return;
     }
