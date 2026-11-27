@@ -15,6 +15,7 @@ let flippedCards = [];
 let matchedCount = 0;
 let memoryMoves = 0;
 let memoryLocked = false;
+let memoryTimeout;
 
 const allQuestions = {
   general: [
@@ -216,10 +217,14 @@ function startTimer() {
       answerLocked = true;
       updateNavButtons();
       if (gameMode === 'survival') {
-        window.setTimeout(showResult, 250);
+        feedbackTimeout = window.setTimeout(() => {
+          if (!byId('quiz-screen').classList.contains('hidden')) showResult();
+        }, 250);
         return;
       }
-      window.setTimeout(advanceQuestion, 300);
+      feedbackTimeout = window.setTimeout(() => {
+        if (!byId('quiz-screen').classList.contains('hidden')) advanceQuestion();
+      }, 300);
     }
   }, 1000);
 }
@@ -328,6 +333,7 @@ function backToMenu() { clearTimeout(reactionTimeout); byId('reaction-screen').c
 byId('memory-restart-btn').addEventListener('click', startMemoryGame);
 function openMemoryGame() { byId('menu-screen').classList.add('hidden'); byId('memory-screen').classList.remove('hidden'); startMemoryGame(); }
 function startMemoryGame() {
+  clearTimeout(memoryTimeout);
   const grid = byId('memory-grid');
   grid.replaceChildren();
   flippedCards = [];
@@ -369,7 +375,7 @@ function handleCardClick(card, index) {
     if (matchedCount === memoryEmojis.length) byId('memory-message').textContent = `🎉 All pairs found in ${memoryMoves} moves!`;
   } else {
     memoryLocked = true;
-    window.setTimeout(() => {
+    memoryTimeout = window.setTimeout(() => {
       [first, second].forEach((item, itemIndex) => {
         item.classList.remove('flipped');
         item.textContent = '';
@@ -380,7 +386,7 @@ function handleCardClick(card, index) {
     }, 800);
   }
 }
-function backToMenuFromMemory() { memoryLocked = false; flippedCards = []; byId('memory-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
+function backToMenuFromMemory() { clearTimeout(memoryTimeout); memoryLocked = false; flippedCards = []; byId('memory-screen').classList.add('hidden'); byId('menu-screen').classList.remove('hidden'); }
 
 /* Keyboard shortcuts for answer selection. */
 document.addEventListener('keydown', event => {
