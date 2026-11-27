@@ -60,6 +60,8 @@ function applyTheme(theme) {
   const button = byId('theme-toggle');
   button.textContent = theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode';
   button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.setAttribute('content', theme === 'dark' ? '#111522' : '#f3f6fb');
 }
 function toggleTheme() {
   const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
