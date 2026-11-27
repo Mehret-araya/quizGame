@@ -32,15 +32,21 @@ const allQuestions = {
   ],
   computer: [
     { question: 'Which language runs in the browser?', options: ['Python', 'C', 'Java', 'JavaScript'], answer: 'JavaScript' },
-    { question: 'HTML stands for?', options: ['Hyper Text Markup Language', 'Hot Mail', 'High Text Machine Language', 'None'], answer: 'Hyper Text Markup Language' }
+    { question: 'HTML stands for?', options: ['Hyper Text Markup Language', 'Hot Mail', 'High Text Machine Language', 'None'], answer: 'Hyper Text Markup Language' },
+    { question: 'What does CSS stand for?', options: ['Cascading Style Sheets', 'Computer Style System', 'Creative Sheet Syntax', 'Coded Style Script'], answer: 'Cascading Style Sheets' },
+    { question: 'Which data structure uses Last-In, First-Out order?', options: ['Queue', 'Stack', 'Tree', 'Graph'], answer: 'Stack' }
   ],
   geography: [
     { question: 'What is the largest continent?', options: ['Africa', 'Asia', 'Europe', 'Australia'], answer: 'Asia' },
-    { question: 'Which ocean is the largest?', options: ['Atlantic', 'Indian', 'Pacific', 'Arctic'], answer: 'Pacific' }
+    { question: 'Which ocean is the largest?', options: ['Atlantic', 'Indian', 'Pacific', 'Arctic'], answer: 'Pacific' },
+    { question: 'Which river flows through Cairo?', options: ['Amazon', 'Nile', 'Danube', 'Yangtze'], answer: 'Nile' },
+    { question: 'What is the capital of Japan?', options: ['Kyoto', 'Osaka', 'Tokyo', 'Seoul'], answer: 'Tokyo' }
   ],
   science: [
     { question: 'Water formula is?', options: ['H₂O', 'CO₂', 'O₂', 'NaCl'], answer: 'H₂O' },
-    { question: 'The Sun is a…', options: ['Planet', 'Star', 'Moon', 'Asteroid'], answer: 'Star' }
+    { question: 'The Sun is a…', options: ['Planet', 'Star', 'Moon', 'Asteroid'], answer: 'Star' },
+    { question: 'Which gas do plants absorb from the air for photosynthesis?', options: ['Nitrogen', 'Oxygen', 'Carbon dioxide', 'Hydrogen'], answer: 'Carbon dioxide' },
+    { question: 'How many bones are in the adult human body?', options: ['186', '206', '226', '256'], answer: '206' }
   ]
 };
 
@@ -65,6 +71,12 @@ byId('theme-toggle').addEventListener('click', toggleTheme);
 
 /* Quiz setup and question loading. */
 byId('start-btn').addEventListener('click', startQuiz);
+function sliceQuestionsByLength(pool, difficulty) {
+  if (difficulty === 'easy') return pool.slice(0, 2);
+  if (difficulty === 'medium') return pool.slice(0, 3);
+  return pool;
+}
+
 async function startQuiz() {
   const button = byId('start-btn');
   const type = byId('quiz-type').value;
@@ -73,15 +85,15 @@ async function startQuiz() {
   button.disabled = true;
   button.innerHTML = 'Loading questions…';
   if (type === 'api') {
+    const amount = difficulty === 'easy' ? 2 : difficulty === 'medium' ? 3 : 5;
     try {
-      await fetchAPIQuestions();
+      await fetchAPIQuestions(amount);
     } catch (error) {
       window.alert('Could not load online questions. General knowledge will be used instead.');
-      currentQuestions = shuffle([...allQuestions.general]);
+      currentQuestions = sliceQuestionsByLength(shuffle([...allQuestions.general]), difficulty);
     }
   } else {
-    const pool = shuffle([...allQuestions[type]]);
-    currentQuestions = difficulty === 'easy' ? pool.slice(0, 2) : difficulty === 'medium' ? pool.slice(0, 3) : pool;
+    currentQuestions = sliceQuestionsByLength(shuffle([...allQuestions[type]]), difficulty);
   }
   button.disabled = false;
   button.innerHTML = 'Start quiz <span>→</span>';
@@ -97,8 +109,8 @@ async function startQuiz() {
   showQuestion();
 }
 
-async function fetchAPIQuestions() {
-  const response = await fetch('https://opentdb.com/api.php?amount=5&type=multiple', { signal: AbortSignal.timeout(10000) });
+async function fetchAPIQuestions(amount = 5) {
+  const response = await fetch(`https://opentdb.com/api.php?amount=${amount}&type=multiple`, { signal: AbortSignal.timeout(10000) });
   if (!response.ok) throw new Error('Question service is unavailable');
   const data = await response.json();
   if (data.response_code !== 0 || !data.results?.length) throw new Error('No questions returned');
