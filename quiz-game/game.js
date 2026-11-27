@@ -285,6 +285,7 @@ function showLeaderboard() {
   byId('leaderboard-screen').classList.remove('hidden');
   const history = readHistory().sort((a, b) => b.percent - a.percent || b.score - a.score);
   const list = byId('leaderboard-list');
+  byId('clear-history-btn').classList.toggle('hidden', !history.length);
   if (!history.length) {
     list.innerHTML = '<div class="empty-state">No scores yet. Play a quiz and your results will show up here.</div>';
     return;
@@ -297,7 +298,9 @@ function showLeaderboard() {
     category.textContent = entry.category || 'Quiz';
     const date = document.createElement('small');
     date.className = 'entry-date';
-    date.textContent = new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const modeLabel = entry.mode === 'survival' ? 'Survival' : 'Classic';
+    const formattedDate = new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    date.textContent = `${modeLabel} · ${formattedDate}`;
     meta.append(category, document.createElement('br'), date);
     const scoreLabel = document.createElement('strong');
     scoreLabel.textContent = `${entry.score}/${entry.total} · ${entry.percent}%`;
