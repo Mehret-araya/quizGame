@@ -4,7 +4,15 @@ A browser based collection of quick games: topic quizzes, a survival quiz mode, 
 
 ## Run the game
 
-Open [`quiz-game/INDEX.html`](quiz-game/INDEX.html) in a modern browser. For online trivia questions, serve the folder through a local web server so the browser can make the Open Trivia Database request. The built in quiz categories work offline.
+Open [`quiz-game/INDEX.html`](quiz-game/INDEX.html) in a modern browser. The built-in quiz categories, reaction test, and memory match work offline.
+
+For online trivia questions, serve the repository root through a local web server so the browser can make the Open Trivia Database request:
+
+```sh
+python -m http.server 8000
+```
+
+Then open `http://localhost:8000/quiz-game/INDEX.html` in your browser.
 
 ## Games and features
 
