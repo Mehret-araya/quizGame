@@ -125,22 +125,32 @@ function showQuestion() {
   clearInterval(timer);
   answerLocked = false;
   const question = currentQuestions[currentIndex];
-  byId('question').textContent = question.question;
-  byId('question').focus({ preventScroll: true });
+  const savedAnswer = userAnswers[currentIndex];
+  const isAnswered = savedAnswer !== null;
+  const questionHeading = byId('question');
+  questionHeading.textContent = question.question;
+  if (savedAnswer === 'TIMEOUT') {
+    questionHeading.setAttribute('aria-label', `${question.question} Time expired`);
+  } else {
+    questionHeading.removeAttribute('aria-label');
+  }
+  questionHeading.focus({ preventScroll: true });
   const options = byId('options');
   options.replaceChildren();
   question.options.forEach((option, index) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.option = option;
+    button.disabled = isAnswered;
     const letter = document.createElement('span');
     letter.className = 'option-letter';
     letter.textContent = String(index + 1);
     const label = document.createElement('span');
     label.textContent = option;
     button.append(letter, label);
-    if (userAnswers[currentIndex] === option) {
-      button.classList.add(option === question.answer ? 'correct-anim' : 'wrong-anim');
+    if (isAnswered) {
+      if (option === question.answer) button.classList.add('correct-anim');
+      else if (savedAnswer === option) button.classList.add('wrong-anim');
     }
     button.addEventListener('click', () => selectAnswer(option));
     options.appendChild(button);
@@ -150,11 +160,18 @@ function showQuestion() {
   byId('progress-fill').style.width = `${percent}%`;
   document.querySelector('.progress-track').setAttribute('aria-valuenow', percent);
   updateNavButtons();
-  startTimer();
+  if (isAnswered) {
+    const timerElement = byId('timer');
+    timerElement.textContent = savedAnswer === 'TIMEOUT' ? '⏱ 0s' : '⏱ Done';
+    timerElement.setAttribute('aria-label', savedAnswer === 'TIMEOUT' ? 'Time expired' : 'Question answered');
+    timerElement.classList.remove('urgent');
+  } else {
+    startTimer();
+  }
 }
 
 function selectAnswer(option) {
-  if (answerLocked) return;
+  if (answerLocked || userAnswers[currentIndex] !== null) return;
   answerLocked = true;
   updateNavButtons();
   clearInterval(timer);
